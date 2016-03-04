@@ -1,8 +1,13 @@
 import java.util.*;
 public class WhitePlayer {
-// write this class.. Add variables and anything else you need
+   Node currentNode = null;
+   int boardSize = -1;
+   int maxTimePerMove = -1;
+
    public WhitePlayer(String player_name, int boardSize, int maxTimePerMove){
-           
+      currentNode = new Node(new Board(boardSize));
+      this.boardSize = boardSize;
+      this.maxTimePerMove = maxTimePerMove;    
    }
 //write this method and any other methods that you need
    Move getMove(){
@@ -10,7 +15,8 @@ public class WhitePlayer {
       return null;
    }		 
    void update(Move m){
-   	 
+      currentNode.board.grid[m.getX1()][m.getY1()] = 1;
+      currentNode.board.grid[m.getX2()][m.getY2()] = 1;
    }
 
    private int[] alphaBeta(Node curNode, int searchDepth, int alpha, int beta, boolean maxPlayer) {
@@ -79,6 +85,36 @@ public class WhitePlayer {
       
       protected List<Move> genMoves(){
          List<Move> result = new ArrayList();
+         List<Move> firstPassRes = new ArrayList();
+         //first stone
+         for(int i = 0; i < boardSize; i++) {
+            for(int j = 0; j < boardSize; j++) {
+               if(grid[i][j] == 0 && 
+               ((isInGrid(i+1,j) && grid[i+1][j] > 0) ||
+                (isInGrid(i-1,j) && grid[i-1][j] > 0) ||
+                (isInGrid(i,j+1) && grid[i][j+1] > 0) ||
+                (isInGrid(i,j-1) && grid[i][j-1] > 0))){
+                  firstPassRes.add(new Move(i,j,-1,-1));
+               }
+            }
+         }
+         //second stone
+         for(int k = 0; k < firstPassRes.size(); k++){
+            Move curMove = firstPassRes.get(k);
+            grid[curMove.getX1()][curMove.getY1()] = 2;        
+            for(int i = 0; i < boardSize; i++) {
+               for(int j = 0; j < boardSize; j++) {
+                  if(grid[i][j] == 0 && 
+                  ((isInGrid(i+1,j) && grid[i+1][j] > 0)||
+                  (isInGrid(i-1,j) && grid[i-1][j] > 0) ||
+                  (isInGrid(i,j+1) && grid[i][j+1] > 0) ||
+                  (isInGrid(i,j-1) && grid[i][j-1] > 0))){
+                     result.add(new Move(curMove.getX1(),curMove.getX2(),i,j));
+                  }
+               }
+            }
+            grid[curMove.getX1()][curMove.getY1()] = 0;
+         }
          return result;
       }
       
@@ -86,6 +122,15 @@ public class WhitePlayer {
          grid[move.getX1()][move.getY1()] = 2;
          grid[move.getX2()][move.getY2()] = 2;
          return;
+      }
+      
+      private boolean isInGrid(int i, int j) {
+      //Check if a position is valid in the grid
+         if(i < 0 ||j < 0) 
+            return false;
+         if(i >= boardSize || j >= boardSize) 
+            return false;
+         return true;
       }
    }
 }
