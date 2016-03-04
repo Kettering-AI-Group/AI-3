@@ -9,44 +9,54 @@ public class WhitePlayer {
       this.boardSize = boardSize;
       this.maxTimePerMove = maxTimePerMove;    
    }
-//write this method and any other methods that you need
+   
+   //write this method and any other methods that you need
    Move getMove(){
    //alphaBeta(currentState, searchDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
       return null;
    }		 
+   
+   //1: Black Player 2: White Player
    void update(Move m){
       currentNode.board.grid[m.getX1()][m.getY1()] = 1;
       currentNode.board.grid[m.getX2()][m.getY2()] = 1;
    }
 
-   private int[] alphaBeta(Node curNode, int searchDepth, int alpha, int beta, boolean maxPlayer) {
+   private int[] alphaBeta(Node curNode, int searchDepth, int alpha, int beta, boolean maxPlayer){
       int[] tempVal = {0,0};//{curValue, locOfValue}
-      if(searchDepth == 0 || curNode.legalMoves.size() == 0) {
+      
+      if(searchDepth == 0 || curNode.legalMoves.size() == 0){
          tempVal[0] = curNode.evalNode();
          return tempVal;
       }
-      if(maxPlayer == true) {
+      
+      if(maxPlayer){
          tempVal[0] = Integer.MIN_VALUE;
-         for(int i = 0; i < curNode.legalMoves.size(); i++) {        
+         
+         for(int i = 0; i < curNode.legalMoves.size(); i++){        
             tempVal[0] = Math.max(tempVal[0], alphaBeta(curNode.children.get(i), searchDepth - 1, alpha, beta, false)[0]);
             tempVal[1] = i;
             alpha = Math.max(alpha, tempVal[0]);
-            if(beta <= alpha) {
+            
+            if(beta <= alpha){
                break;
             }
          }
+         
          return tempVal;
-      } 
-      else {
+      }else{//minPlayer
          tempVal[0] = Integer.MAX_VALUE;
-         for(int i = 0; i < curNode.legalMoves.size(); i++) {    
+         
+         for(int i = 0; i < curNode.legalMoves.size(); i++){    
             tempVal[0] = Math.min(tempVal[0], alphaBeta(curNode.children.get(i), searchDepth - 1, alpha, beta, true)[0]);
             tempVal[1] = i;
             beta = Math.min(beta, tempVal[0]);
-            if(beta <= alpha) {
+            
+            if(beta <= alpha){
                break;
             }
          }
+         
          return tempVal;
       }
    }
@@ -69,11 +79,66 @@ public class WhitePlayer {
          children.add(child);
       }
       
-      private int evalNode(){
-         int result = -1;
+      //Breaking longer chains of opponets increases value
+      //Increasing chains of your own also increases value
+      public int evalNode(){
+         int[][] curGrid = board.getGrid();
+         int[] testPos = {0,0}; //need to find out what position to test
+         int result = 0;
+         int tmpLen = 0;
+         
+         for(int i = 0; i <=7; i++){
+            tmpLen = chainLength(curGrid, testPos, i);
+            if(tmpLen == 5){
+               result += 999; //If a len of 5 is found, reguardless of player, it is the highest priority to stop it
+            }else{
+               result += tmpLen * tmpLen; //Just to make numbers more dramatic, longer chains matter more
+            }
+         }
          return result;
       }
-   
+      
+      //direction = 0: D, 1:L-D, 2:L, 3: L-U, 4: U, 5: R-U, 6: R, 7: R-D
+      private int chainLength(int[][] grid, int[] loc, int direction){
+         int lMod = 0; //U-D
+         int rMod = 0; //L-R
+         int len = 0; //Length of chain of nodes specified
+         int currentId = grid[loc[0]][loc[1]];
+         int searchId = currentId;
+         
+         switch (direction) {
+            case 0:  lMod = -1;
+                     break;
+            case 1:  lMod = -1;
+                     rMod = -1;
+                     break;
+            case 2:  rMod = -1;
+                     break;
+            case 3:  lMod = 1;
+                     rMod = -1;
+                     break;
+            case 4:  lMod = 1;
+                     break;
+            case 5:  lMod = 1;
+                     rMod = 1;
+                     break;
+            case 6:  rMod = 1;
+                     break;
+            case 7:  lMod = -1;
+                     rMod = 1;
+                     break;
+            default: return 0;
+         }
+         
+         while(currentId == searchId){
+            len++;
+            loc[0] += rMod;
+            loc[1] += lMod;
+            currentId = grid[loc[0]][loc[1]];
+         }
+         
+         return len;
+      }
    }
    
    class Board {
@@ -86,35 +151,48 @@ public class WhitePlayer {
       protected List<Move> genMoves(){
          List<Move> result = new ArrayList();
          List<Move> firstPassRes = new ArrayList();
+         
          //first stone
-         for(int i = 0; i < boardSize; i++) {
-            for(int j = 0; j < boardSize; j++) {
+         for(int i = 0; i < boardSize; i++){
+            for(int j = 0; j < boardSize; j++){
                if(grid[i][j] == 0 && 
                ((isInGrid(i+1,j) && grid[i+1][j] > 0) ||
                 (isInGrid(i-1,j) && grid[i-1][j] > 0) ||
                 (isInGrid(i,j+1) && grid[i][j+1] > 0) ||
-                (isInGrid(i,j-1) && grid[i][j-1] > 0))){
+                (isInGrid(i,j-1) && grid[i][j-1] > 0) ||
+                (isInGrid(i-1,j-1) && grid[i-1][j-1] > 0) ||
+                (isInGrid(i+1,j+1) && grid[i+1][j+1] > 0) ||
+                (isInGrid(i-1,j+1) && grid[i-1][j+1] > 0) ||
+                (isInGrid(i+1,j-1) && grid[i+1][j-1] > 0))){
                   firstPassRes.add(new Move(i,j,-1,-1));
                }
             }
          }
+         
          //second stone
          for(int k = 0; k < firstPassRes.size(); k++){
             Move curMove = firstPassRes.get(k);
-            grid[curMove.getX1()][curMove.getY1()] = 2;        
-            for(int i = 0; i < boardSize; i++) {
-               for(int j = 0; j < boardSize; j++) {
+            grid[curMove.getX1()][curMove.getY1()] = 2;
+            
+            for(int i = 0; i < boardSize; i++){
+               for(int j = 0; j < boardSize; j++){
                   if(grid[i][j] == 0 && 
-                  ((isInGrid(i+1,j) && grid[i+1][j] > 0)||
-                  (isInGrid(i-1,j) && grid[i-1][j] > 0) ||
-                  (isInGrid(i,j+1) && grid[i][j+1] > 0) ||
-                  (isInGrid(i,j-1) && grid[i][j-1] > 0))){
+                  ((isInGrid(i+1,j) && grid[i+1][j] > 0) ||
+                   (isInGrid(i-1,j) && grid[i-1][j] > 0) ||
+                   (isInGrid(i,j+1) && grid[i][j+1] > 0) ||
+                   (isInGrid(i,j-1) && grid[i][j-1] > 0) ||
+                   (isInGrid(i-1,j-1) && grid[i-1][j-1] > 0) ||
+                   (isInGrid(i+1,j+1) && grid[i+1][j+1] > 0) ||
+                   (isInGrid(i-1,j+1) && grid[i-1][j+1] > 0) ||
+                   (isInGrid(i+1,j-1) && grid[i+1][j-1] > 0))){
                      result.add(new Move(curMove.getX1(),curMove.getX2(),i,j));
                   }
                }
             }
+            
             grid[curMove.getX1()][curMove.getY1()] = 0;
          }
+         
          return result;
       }
       
@@ -124,7 +202,11 @@ public class WhitePlayer {
          return;
       }
       
-      private boolean isInGrid(int i, int j) {
+      protected int[][] getGrid(){
+         return grid;
+      }
+      
+      private boolean isInGrid(int i, int j){
       //Check if a position is valid in the grid
          if(i < 0 ||j < 0) 
             return false;
