@@ -101,23 +101,23 @@ public class WhitePlayer {
          if(one[0] == two[0]){
             tmpLen = one[1] + two[1];
             
-            if(tmpLen > 5){
+            if(tmpLen >= 5){
                result += 999;
-            }else{
+            }else if((tmpLen + one[2] + two[2]) >= 5){ //check if it is even possible to 
                result += tmpLen;
             }  
          }else{
             if(one[1] == 5){
                result += 999;
-            }else{
+            }else if((one[1] + one[2]) >= 5){ //check if it is even possible to 
                result += one[1];
-            }
+            }  
             
             if(two[1] == 5){
                result += 999;
-            }else{
+            }else if((two[1] + two[2]) >= 5){ //check if it is even possible to 
                result += two[1];
-            }
+            }  
          }
          
          return result;
@@ -130,6 +130,7 @@ public class WhitePlayer {
          int len = 0; //Length of chain of nodes specified
          int currentId = grid[loc[0]][loc[1]];
          int searchId = currentId;
+         int capped = 0;
          
          if(searchId == 0){
             return new int[]{0,0};
@@ -166,7 +167,15 @@ public class WhitePlayer {
             currentId = grid[loc[0]][loc[1]];
          }
          
-         return new int[]{searchId, len};
+         //gives all empty spaces after chain up to 6 that are open
+         while((currentId == 0) || ((capped + len) == 6)){
+            capped++;
+            loc[0] += rMod;
+            loc[1] += lMod;
+            currentId = grid[loc[0]][loc[1]];
+         }
+         
+         return new int[]{searchId, len, capped};
       }
    }
    
