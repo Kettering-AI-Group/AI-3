@@ -128,13 +128,7 @@ public class WhitePlayer {
          int lMod = 0; //U-D
          int rMod = 0; //L-R
          int len = 0; //Length of chain of nodes specified
-         int currentId = grid[loc[0]][loc[1]];
-         int searchId = currentId;
          int capped = 0;
-         
-         if(searchId == 0){
-            return new int[]{0,0};
-         }
          
          switch (direction) {
             case 0:  lMod = -1;
@@ -157,14 +151,19 @@ public class WhitePlayer {
             case 7:  lMod = -1;
                      rMod = 1;
                      break;
-            default: return new int[]{0,0};
+            default: return new int[]{0,0,0};
          }
          
-         while(currentId == searchId){
-            len++;
-            loc[0] += rMod;
-            loc[1] += lMod;
-            currentId = grid[loc[0]][loc[1]];
+         int searchId = grid[loc[0] + lMod][loc[1] + rMod];
+         int currentId = searchId;
+         
+         if(searchId != 0){
+            while(currentId == searchId){
+               len++;
+               loc[0] += rMod;
+               loc[1] += lMod;
+               currentId = grid[loc[0]][loc[1]];
+            }
          }
          
          //gives all empty spaces after chain up to 6 that are open
