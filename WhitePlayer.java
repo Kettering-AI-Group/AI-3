@@ -83,9 +83,34 @@ public class WhitePlayer {
       //Increasing chains of your own also increases value
       public int evalNode(){
          int[][] curGrid = board.getGrid();
-         int[] testPos = {0,0}; //need to find out what position to test
          int result = 0;
-                  
+         int tmpRes = 0;
+         int maxRes = 0;
+         Move mov;
+         Move bestMov;
+         
+         for(int i=0;i<legalMoves.size();i++){
+            mov = legalMoves.get(i);
+            tmpRes = nodeHeu(new int[]{mov.getX1(), mov.getY1()});
+            
+            if(tmpRes > maxRes){
+               bestMov = mov;
+               maxRes = tmpRes;
+            }
+            
+            result += tmpRes;
+         }
+                
+         return result;
+      }
+      
+      //Breaking longer chains of opponets increases value
+      //Increasing chains of your own also increases value
+      public int nodeHeu(int[] testPos){
+         int[][] curGrid = board.getGrid();
+         int result = 0;
+         int tmpRes = 0;
+          
          result += calcValue(chainLength(curGrid, testPos, 0), chainLength(curGrid, testPos, 4));
          result += calcValue(chainLength(curGrid, testPos, 2), chainLength(curGrid, testPos, 6));
          result += calcValue(chainLength(curGrid, testPos, 1), chainLength(curGrid, testPos, 5));
@@ -94,6 +119,7 @@ public class WhitePlayer {
          return result;
       }
       
+      //returning -1 means game over
       private int calcValue(int[] one, int[] two){
          int result = 0;
          int tmpLen = 0;
@@ -101,21 +127,21 @@ public class WhitePlayer {
          if(one[0] == two[0]){
             tmpLen = one[1] + two[1];
             
-            if(tmpLen >= 5){
-               result += 999;
-            }else if((tmpLen + one[2] + two[2]) >= 5){ //check if it is even possible to 
+            /*if(tmpLen >= 5){
+               result += -1;
+            }else */if((tmpLen + one[2] + two[2]) >= 5){ //check if it is even possible to 
                result += tmpLen;
             }  
          }else{
-            if(one[1] == 5){
-               result += 999;
-            }else if((one[1] + one[2]) >= 5){ //check if it is even possible to 
+            /*if(one[1] == 5){
+               result += -1;
+            }else */if((one[1] + one[2]) >= 5){ //check if it is even possible to 
                result += one[1];
             }  
             
-            if(two[1] == 5){
-               result += 999;
-            }else if((two[1] + two[2]) >= 5){ //check if it is even possible to 
+            /*if(two[1] == 5){
+               result += -1;
+            }else */if((two[1] + two[2]) >= 5){ //check if it is even possible to 
                result += two[1];
             }  
          }
