@@ -85,26 +85,55 @@ public class WhitePlayer {
          int[][] curGrid = board.getGrid();
          int[] testPos = {0,0}; //need to find out what position to test
          int result = 0;
+                  
+         result += calcValue(chainLength(curGrid, testPos, 0), chainLength(curGrid, testPos, 4));
+         result += calcValue(chainLength(curGrid, testPos, 2), chainLength(curGrid, testPos, 6));
+         result += calcValue(chainLength(curGrid, testPos, 1), chainLength(curGrid, testPos, 5));
+         result += calcValue(chainLength(curGrid, testPos, 3), chainLength(curGrid, testPos, 7));
+                  
+         return result;
+      }
+      
+      private int calcValue(int[] one, int[] two){
+         int result = 0;
          int tmpLen = 0;
          
-         for(int i = 0; i <=7; i++){
-            tmpLen = chainLength(curGrid, testPos, i);
-            if(tmpLen == 5){
-               result += 999; //If a len of 5 is found, reguardless of player, it is the highest priority to stop it
+         if(one[0] == two[0]){
+            tmpLen = one[1] + two[1];
+            
+            if(tmpLen > 5){
+               result += 999;
             }else{
-               result += tmpLen * tmpLen; //Just to make numbers more dramatic, longer chains matter more
+               result += tmpLen;
+            }  
+         }else{
+            if(one[1] == 5){
+               result += 999;
+            }else{
+               result += one[1];
+            }
+            
+            if(two[1] == 5){
+               result += 999;
+            }else{
+               result += two[1];
             }
          }
+         
          return result;
       }
       
       //direction = 0: D, 1:L-D, 2:L, 3: L-U, 4: U, 5: R-U, 6: R, 7: R-D
-      private int chainLength(int[][] grid, int[] loc, int direction){
+      private int[] chainLength(int[][] grid, int[] loc, int direction){
          int lMod = 0; //U-D
          int rMod = 0; //L-R
          int len = 0; //Length of chain of nodes specified
          int currentId = grid[loc[0]][loc[1]];
          int searchId = currentId;
+         
+         if(searchId == 0){
+            return new int[]{0,0};
+         }
          
          switch (direction) {
             case 0:  lMod = -1;
@@ -127,7 +156,7 @@ public class WhitePlayer {
             case 7:  lMod = -1;
                      rMod = 1;
                      break;
-            default: return 0;
+            default: return new int[]{0,0};
          }
          
          while(currentId == searchId){
@@ -137,7 +166,7 @@ public class WhitePlayer {
             currentId = grid[loc[0]][loc[1]];
          }
          
-         return len;
+         return new int[]{searchId, len};
       }
    }
    
