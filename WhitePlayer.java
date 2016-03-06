@@ -1,9 +1,11 @@
 import java.util.*;
+
 public class WhitePlayer {
    Node currentNode = null;
    int boardSize = -1;
    int maxTimePerMove = -1;
-
+   int depth = 6;
+   
    public WhitePlayer(String player_name, int boardSize, int maxTimePerMove){
       currentNode = new Node(new Board(boardSize));
       this.boardSize = boardSize;
@@ -12,8 +14,9 @@ public class WhitePlayer {
    
    //write this method and any other methods that you need
    Move getMove(){
-   //alphaBeta(currentState, searchDepth, Integer.MIN_VALUE, Integer.MAX_VALUE, true);
-      return null;
+      int index = alphaBeta(currentNode, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, true)[1];
+      currentNode = currentNode.children.get(index);
+      return currentNode.board.lastMove;
    }		 
    
    //1: Black Player 2: White Player
@@ -65,17 +68,25 @@ public class WhitePlayer {
       Board board;
       List<Node> children;
       List<Move> legalMoves;
+      Move mov;
    
       protected Node(Board myBoard){
          board = myBoard;
          children = new ArrayList();
          legalMoves = board.genMoves();
       }
+   
+      protected Node(Board myBoard, Move takenMov){
+         board = myBoard;
+         children = new ArrayList();
+         legalMoves = board.genMoves();
+         mov = takenMov;
+      }
       
       private void genChild(Move move){
          Board newBoard = board;
          newBoard.applyMove(move);
-         Node child = new Node(newBoard);
+         Node child = new Node(newBoard, move);
          children.add(child);
       }
       
@@ -85,19 +96,11 @@ public class WhitePlayer {
          int[][] curGrid = board.getGrid();
          int result = 0;
          int tmpRes = 0;
-         int maxRes = 0;
          Move mov;
-         Move bestMov;
          
          for(int i=0;i<legalMoves.size();i++){
             mov = legalMoves.get(i);
-            tmpRes = nodeHeu(new int[]{mov.getX1(), mov.getY1()});
-            
-            if(tmpRes > maxRes){
-               bestMov = mov;
-               maxRes = tmpRes;
-            }
-            
+            tmpRes = nodeHeu(new int[]{mov.getX1(), mov.getY1()});            
             result += tmpRes;
          }
                 
@@ -206,7 +209,8 @@ public class WhitePlayer {
    
    class Board {
       int[][] grid;
-   
+      Move lastMove;
+      
       protected Board(int boardSize){
          grid = new int[boardSize][boardSize];
       }
@@ -262,6 +266,7 @@ public class WhitePlayer {
       protected void applyMove(Move move){
          grid[move.getX1()][move.getY1()] = 2;
          grid[move.getX2()][move.getY2()] = 2;
+         lastMove = move;
          return;
       }
       
