@@ -101,14 +101,20 @@ public class BlackPlayer {
       //Breaking longer chains of opponets increases value
       //Increasing chains of your own also increases value
       public int evalNode(){
-         int[][] curGrid = board.getGrid();
          int result = 0;
          int tmpRes = 0;
          Move mov;
          
          for(int i=0;i<legalMoves.size();i++){
             mov = legalMoves.get(i);
-            tmpRes = nodeHeu(new int[]{mov.getX1(), mov.getY1()});            
+            tmpRes = 0;
+            
+            tmpRes += nodeHeu(new int[]{mov.getX1(), mov.getY1()});
+            board.grid[mov.getX1()][mov.getY1()] = 1;
+            
+            tmpRes += nodeHeu(new int[]{mov.getX2(), mov.getY2()});
+            board.grid[mov.getX1()][mov.getY1()] = 0;
+            
             result += tmpRes;
          }
                 

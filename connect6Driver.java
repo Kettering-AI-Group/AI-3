@@ -72,10 +72,16 @@ class Connect6Driver{
                //printMessageAboutTheWinner;
             }else{
                if (turn.equals("black")){
-                  whitePlayer.update(currentMove);
+                  if (whitePlayer != null){
+                     whitePlayer.update(currentMove);
+                  }
+                  
                   turn = "white";
                }else{
-                  blackPlayer.update(currentMove);
+                  if (blackPlayer != null){
+                     blackPlayer.update(currentMove);
+                  }
+                  
                   turn = "black";
                }
             }
