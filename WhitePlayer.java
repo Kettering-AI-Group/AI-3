@@ -15,14 +15,25 @@ public class WhitePlayer {
    //write this method and any other methods that you need
    Move getMove(){
       int index = alphaBeta(currentNode, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, true)[1];
-      currentNode = currentNode.children.get(index);
-      return currentNode.board.lastMove;
+      System.out.println(index);
+      System.out.println(currentNode.legalMoves.size());
+      Move selMove;
+      
+      if(currentNode.legalMoves.size() != 0){ 
+         selMove = currentNode.legalMoves.get(index);
+      }else{
+         int spot = boardSize/2;
+         selMove = new Move(spot,spot,spot,(spot+1));
+      }
+      
+      return selMove;
    }		 
    
    //1: Black Player 2: White Player
    void update(Move m){
       currentNode.board.grid[m.getX1()][m.getY1()] = 1;
       currentNode.board.grid[m.getX2()][m.getY2()] = 1;
+      currentNode.genMoves();
    }
 
    private int[] alphaBeta(Node curNode, int searchDepth, int alpha, int beta, boolean maxPlayer){
@@ -36,7 +47,7 @@ public class WhitePlayer {
       if(maxPlayer){
          tempVal[0] = Integer.MIN_VALUE;
          
-         for(int i = 0; i < curNode.legalMoves.size(); i++){        
+         for(int i = 0; i < curNode.children.size(); i++){        
             tempVal[0] = Math.max(tempVal[0], alphaBeta(curNode.children.get(i), searchDepth - 1, alpha, beta, false)[0]);
             tempVal[1] = i;
             alpha = Math.max(alpha, tempVal[0]);
@@ -50,7 +61,7 @@ public class WhitePlayer {
       }else{//minPlayer
          tempVal[0] = Integer.MAX_VALUE;
          
-         for(int i = 0; i < curNode.legalMoves.size(); i++){    
+         for(int i = 0; i < curNode.children.size(); i++){    
             tempVal[0] = Math.min(tempVal[0], alphaBeta(curNode.children.get(i), searchDepth - 1, alpha, beta, true)[0]);
             tempVal[1] = i;
             beta = Math.min(beta, tempVal[0]);
@@ -75,18 +86,15 @@ public class WhitePlayer {
          children = new ArrayList();
          legalMoves = board.genMoves();
       }
-   
-      protected Node(Board myBoard, Move takenMov){
-         board = myBoard;
-         children = new ArrayList();
+      
+      private void genMoves(){
          legalMoves = board.genMoves();
-         mov = takenMov;
       }
       
       private void genChild(Move move){
          Board newBoard = board;
          newBoard.applyMove(move);
-         Node child = new Node(newBoard, move);
+         Node child = new Node(newBoard);
          children.add(child);
       }
       
@@ -252,7 +260,7 @@ public class WhitePlayer {
                    (isInGrid(i+1,j+1) && grid[i+1][j+1] > 0) ||
                    (isInGrid(i-1,j+1) && grid[i-1][j+1] > 0) ||
                    (isInGrid(i+1,j-1) && grid[i+1][j-1] > 0))){
-                     result.add(new Move(curMove.getX1(),curMove.getX2(),i,j));
+                     result.add(new Move(curMove.getX1(),curMove.getY1(),i,j));
                   }
                }
             }
@@ -276,7 +284,7 @@ public class WhitePlayer {
       
       private boolean isInGrid(int i, int j){
       //Check if a position is valid in the grid
-         if(i < 0 ||j < 0) 
+         if(i < 0 || j < 0) 
             return false;
          if(i >= boardSize || j >= boardSize) 
             return false;
