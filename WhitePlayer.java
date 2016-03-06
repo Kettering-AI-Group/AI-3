@@ -36,22 +36,24 @@ public class WhitePlayer {
    void update(Move m){
       currentNode.board.grid[m.getX1()][m.getY1()] = 1;
       currentNode.board.grid[m.getX2()][m.getY2()] = 1;
-      currentNode.genMoves();
+      currentNode.genChildren();
    }
 
    private int[] alphaBeta(Node curNode, int searchDepth, int alpha, int beta, boolean maxPlayer){
       int[] tempVal = {0,0};//{curValue, locOfValue}
-      curNode.genMoves();
+      System.out.println(searchDepth);
       
       if(searchDepth == 0 || curNode.legalMoves.size() == 0){
          tempVal[0] = curNode.evalNode();
          return tempVal;
       }
       
+      curNode.genChildren();
+      
       if(maxPlayer){
          tempVal[0] = Integer.MIN_VALUE;
          
-         for(int i = 0; i < curNode.children.size(); i++){        
+         for(int i = 0; i < curNode.children.size(); i++){
             tempVal[0] = Math.max(tempVal[0], alphaBeta(curNode.children.get(i), searchDepth - 1, alpha, beta, false)[0]);
             tempVal[1] = i;
             alpha = Math.max(alpha, tempVal[0]);
@@ -60,8 +62,6 @@ public class WhitePlayer {
                break;
             }
          }
-         
-         return tempVal;
       }else{//minPlayer
          tempVal[0] = Integer.MAX_VALUE;
          
@@ -74,9 +74,9 @@ public class WhitePlayer {
                break;
             }
          }
-         
-         return tempVal;
       }
+         
+      return tempVal;
    }
    
    class Node {
@@ -98,7 +98,7 @@ public class WhitePlayer {
          legalMoves = board.genMoves();
       }
       
-      private void genMoves(){
+      private void genChildren(){
          legalMoves = board.genMoves();
          children = new ArrayList();
          
@@ -336,10 +336,6 @@ public class WhitePlayer {
          grid[move.getX2()][move.getY2()] = 2;
          lastMove = move;
          return;
-      }
-      
-      protected int[][] getGrid(){
-         return grid;
       }
       
       private boolean isInGrid(int i, int j){
