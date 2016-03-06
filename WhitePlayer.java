@@ -196,7 +196,7 @@ public class WhitePlayer {
          }
          
          //gives all empty spaces after chain up to 6 that are open
-         while((currentId == 0) || ((capped + len) == 6)){
+         while((currentId == 0) && ((capped + len) >= 6)){
             capped++;
             loc[0] += rMod;
             loc[1] += lMod;
