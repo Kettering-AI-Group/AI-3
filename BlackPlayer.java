@@ -4,7 +4,7 @@ public class BlackPlayer {
    Node currentNode = null;
    int boardSize = -1;
    int maxTimePerMove = -1;
-   int depth = 6;
+   int depth = 4;
    
    public BlackPlayer(String player_name, int boardSize, int maxTimePerMove){
       currentNode = new Node(new Board(boardSize));
@@ -25,6 +25,9 @@ public class BlackPlayer {
          int spot = boardSize/2;
          selMove = new Move(spot,spot,spot,(spot+1));
       }
+      
+      currentNode.board.grid[selMove.getX1()][selMove.getY1()] = 1;
+      currentNode.board.grid[selMove.getX2()][selMove.getY2()] = 1;
       
       return selMove;
    }		 
@@ -89,10 +92,15 @@ public class BlackPlayer {
       
       private void genMoves(){
          legalMoves = board.genMoves();
+         children = new ArrayList();
+         
+         for(int i = 0; i < legalMoves.size(); i++){    
+            genChild(legalMoves.get(i));
+         }
       }
       
       private void genChild(Move move){
-         Board newBoard = board;
+         Board newBoard = new Board(board.grid);
          newBoard.applyMove(move);
          Node child = new Node(newBoard);
          children.add(child);
@@ -227,6 +235,17 @@ public class BlackPlayer {
       
       protected Board(int boardSize){
          grid = new int[boardSize][boardSize];
+      }
+      
+      protected Board(int[][] board){
+         int boardSize = board.length;
+         grid = new int[boardSize][boardSize];
+         
+         for(int i = 0; i < boardSize; i++){
+            for(int j = 0; j < boardSize; j++){
+               grid[i][j] = board[i][j];
+            }
+         }
       }
       
       protected List<Move> genMoves(){
