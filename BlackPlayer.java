@@ -4,7 +4,7 @@ public class BlackPlayer {
    Node currentNode = null;
    int boardSize = -1;
    int maxTimePerMove = -1;
-   int depth = 4;
+   int depth = 1;
    
    public BlackPlayer(String player_name, int boardSize, int maxTimePerMove){
       currentNode = new Node(new Board(boardSize));
@@ -16,11 +16,11 @@ public class BlackPlayer {
    Move getMove(){
       int index = alphaBeta(currentNode, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, true)[1];
       System.out.println(index);
-      System.out.println(currentNode.legalMoves.size());
+      System.out.println(currentNode.children.size());
       Move selMove;
       
       if(currentNode.legalMoves.size() != 0){ 
-         selMove = currentNode.legalMoves.get(index);
+         selMove = currentNode.children.get(index).mov;
       }else{
          int spot = boardSize/2;
          selMove = new Move(spot,spot,spot,(spot+1));
@@ -36,7 +36,7 @@ public class BlackPlayer {
    void update(Move m){
       currentNode.board.grid[m.getX1()][m.getY1()] = 2;
       currentNode.board.grid[m.getX2()][m.getY2()] = 2;
-      currentNode.genMoves();
+      currentNode.genChildren();
    }
 
    private int[] alphaBeta(Node curNode, int searchDepth, int alpha, int beta, boolean maxPlayer){
@@ -47,10 +47,12 @@ public class BlackPlayer {
          return tempVal;
       }
       
+      curNode.genChildren();
+      
       if(maxPlayer){
          tempVal[0] = Integer.MIN_VALUE;
          
-         for(int i = 0; i < curNode.children.size(); i++){        
+         for(int i = 0; i < curNode.children.size(); i++){
             tempVal[0] = Math.max(tempVal[0], alphaBeta(curNode.children.get(i), searchDepth - 1, alpha, beta, false)[0]);
             tempVal[1] = i;
             alpha = Math.max(alpha, tempVal[0]);
@@ -59,8 +61,6 @@ public class BlackPlayer {
                break;
             }
          }
-         
-         return tempVal;
       }else{//minPlayer
          tempVal[0] = Integer.MAX_VALUE;
          
@@ -73,24 +73,31 @@ public class BlackPlayer {
                break;
             }
          }
-         
-         return tempVal;
       }
+         
+      return tempVal;
    }
    
    class Node {
       Board board;
       List<Node> children;
       List<Move> legalMoves;
-      Move mov;
+      Move mov = null;
    
       protected Node(Board myBoard){
          board = myBoard;
          children = new ArrayList();
          legalMoves = board.genMoves();
       }
+   
+      protected Node(Board myBoard, Move move){
+         board = myBoard;
+         mov = move;
+         children = new ArrayList();
+         legalMoves = board.genMoves();
+      }
       
-      private void genMoves(){
+      private void genChildren(){
          legalMoves = board.genMoves();
          children = new ArrayList();
          
@@ -102,7 +109,7 @@ public class BlackPlayer {
       private void genChild(Move move){
          Board newBoard = new Board(board.grid);
          newBoard.applyMove(move);
-         Node child = new Node(newBoard);
+         Node child = new Node(newBoard, move);
          children.add(child);
       }
       
@@ -112,7 +119,7 @@ public class BlackPlayer {
          int result = 0;
          int tmpRes = 0;
          Move mov;
-         
+            
          for(int i=0;i<legalMoves.size();i++){
             mov = legalMoves.get(i);
             tmpRes = 0;
@@ -125,14 +132,14 @@ public class BlackPlayer {
             
             result += tmpRes;
          }
-                
+         
          return result;
       }
       
       //Breaking longer chains of opponets increases value
       //Increasing chains of your own also increases value
       public int nodeHeu(int[] testPos){
-         int[][] curGrid = board.getGrid();
+         int[][] curGrid = board.grid;
          int result = 0;
          int tmpRes = 0;
           
@@ -149,26 +156,14 @@ public class BlackPlayer {
          int result = 0;
          int tmpLen = 0;
          
+         if(one[0] == -1 && two[0] == -1){
+            return 0;
+         }
+         
+         result = one[1] + two[1];
+         
          if(one[0] == two[0]){
-            tmpLen = one[1] + two[1];
-            
-            /*if(tmpLen >= 5){
-               result += -1;
-            }else */if((tmpLen + one[2] + two[2]) >= 5){ //check if it is even possible to 
-               result += tmpLen;
-            }  
-         }else{
-            /*if(one[1] == 5){
-               result += -1;
-            }else */if((one[1] + one[2]) >= 5){ //check if it is even possible to 
-               result += one[1];
-            }  
-            
-            /*if(two[1] == 5){
-               result += -1;
-            }else */if((two[1] + two[2]) >= 5){ //check if it is even possible to 
-               result += two[1];
-            }  
+            result += result;
          }
          
          return result;
@@ -178,6 +173,7 @@ public class BlackPlayer {
       private int[] chainLength(int[][] grid, int[] loc, int direction){
          int lMod = 0; //U-D
          int rMod = 0; //L-R
+         int boardSize = grid.length;
          int len = 0; //Length of chain of nodes specified
          int capped = 0;
          
@@ -202,10 +198,25 @@ public class BlackPlayer {
             case 7:  lMod = -1;
                      rMod = 1;
                      break;
-            default: return new int[]{0,0,0};
+            default: return new int[]{-1,0,0};
          }
          
-         int searchId = grid[loc[0] + lMod][loc[1] + rMod];
+         if(!board.isInGrid(loc[0] + rMod,loc[0] + rMod)){
+            return new int[]{-1,0,0};
+         }
+         
+         if(!board.isInGrid(loc[1] + lMod,loc[1] + lMod)){
+            return new int[]{-1,0,0};
+         }
+         
+         int searchId = grid[loc[0] + rMod][loc[1] + lMod];
+         
+         if(searchId != 0){
+            return new int[]{searchId,1,0};
+         }else{
+            return new int[]{-1,0,0};
+         }
+         /*
          int currentId = searchId;
          
          if(searchId != 0){
@@ -213,19 +224,37 @@ public class BlackPlayer {
                len++;
                loc[0] += rMod;
                loc[1] += lMod;
+         
+               if(!board.isInGrid(loc[0] + rMod,loc[0] + rMod)){
+                  break;
+               }
+               
+               if(!board.isInGrid(loc[1] + lMod,loc[1] + lMod)){
+                  break;
+               }
+               
                currentId = grid[loc[0]][loc[1]];
             }
          }
          
          //gives all empty spaces after chain up to 6 that are open
-         while((currentId == 0) && ((capped + len) >= 6)){
+         while((currentId == 0) && ((capped + len) < 6)){
             capped++;
             loc[0] += rMod;
             loc[1] += lMod;
+         
+            if(!board.isInGrid(loc[0] + rMod,loc[0] + rMod)){
+               break;
+            }
+            
+            if(!board.isInGrid(loc[1] + lMod,loc[1] + lMod)){
+               break;
+            }
+               
             currentId = grid[loc[0]][loc[1]];
          }
          
-         return new int[]{searchId, len, capped};
+         return new int[]{searchId, len, capped};*/
       }
    }
    
@@ -272,7 +301,7 @@ public class BlackPlayer {
          //second stone
          for(int k = 0; k < firstPassRes.size(); k++){
             Move curMove = firstPassRes.get(k);
-            grid[curMove.getX1()][curMove.getY1()] = 2;
+            grid[curMove.getX1()][curMove.getY1()] = 1;
             
             for(int i = 0; i < boardSize; i++){
                for(int j = 0; j < boardSize; j++){
@@ -301,10 +330,6 @@ public class BlackPlayer {
          grid[move.getX2()][move.getY2()] = 1;
          lastMove = move;
          return;
-      }
-      
-      protected int[][] getGrid(){
-         return grid;
       }
       
       private boolean isInGrid(int i, int j){

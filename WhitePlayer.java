@@ -4,7 +4,7 @@ public class WhitePlayer {
    Node currentNode = null;
    int boardSize = -1;
    int maxTimePerMove = -1;
-   int depth = 2;
+   int depth = 1;
    
    public WhitePlayer(String player_name, int boardSize, int maxTimePerMove){
       currentNode = new Node(new Board(boardSize));
@@ -41,7 +41,6 @@ public class WhitePlayer {
 
    private int[] alphaBeta(Node curNode, int searchDepth, int alpha, int beta, boolean maxPlayer){
       int[] tempVal = {0,0};//{curValue, locOfValue}
-      System.out.println(searchDepth);
       
       if(searchDepth == 0 || curNode.legalMoves.size() == 0){
          tempVal[0] = curNode.evalNode();
@@ -157,26 +156,14 @@ public class WhitePlayer {
          int result = 0;
          int tmpLen = 0;
          
+         if(one[0] == -1 && two[0] == -1){
+            return 0;
+         }
+         
+         result = one[1] + two[1];
+         
          if(one[0] == two[0]){
-            tmpLen = one[1] + two[1];
-            
-            /*if(tmpLen >= 5){
-               result += -1;
-            }else */if((tmpLen + one[2] + two[2]) >= 5){ //check if it is even possible to 
-               result += tmpLen;
-            }  
-         }else{
-            /*if(one[1] == 5){
-               result += -1;
-            }else */if((one[1] + one[2]) >= 5){ //check if it is even possible to 
-               result += one[1];
-            }  
-            
-            /*if(two[1] == 5){
-               result += -1;
-            }else */if((two[1] + two[2]) >= 5){ //check if it is even possible to 
-               result += two[1];
-            }  
+            result += result;
          }
          
          return result;
@@ -211,18 +198,25 @@ public class WhitePlayer {
             case 7:  lMod = -1;
                      rMod = 1;
                      break;
-            default: return new int[]{0,0,0};
+            default: return new int[]{-1,0,0};
          }
          
          if(!board.isInGrid(loc[0] + rMod,loc[0] + rMod)){
-            return new int[]{0,0,0};
+            return new int[]{-1,0,0};
          }
          
          if(!board.isInGrid(loc[1] + lMod,loc[1] + lMod)){
-            return new int[]{0,0,0};
+            return new int[]{-1,0,0};
          }
          
          int searchId = grid[loc[0] + rMod][loc[1] + lMod];
+         
+         if(searchId != 0){
+            return new int[]{searchId,1,0};
+         }else{
+            return new int[]{-1,0,0};
+         }
+         /*
          int currentId = searchId;
          
          if(searchId != 0){
@@ -244,7 +238,7 @@ public class WhitePlayer {
          }
          
          //gives all empty spaces after chain up to 6 that are open
-         while((currentId == 0) && ((capped + len) >= 6)){
+         while((currentId == 0) && ((capped + len) < 6)){
             capped++;
             loc[0] += rMod;
             loc[1] += lMod;
@@ -260,7 +254,7 @@ public class WhitePlayer {
             currentId = grid[loc[0]][loc[1]];
          }
          
-         return new int[]{searchId, len, capped};
+         return new int[]{searchId, len, capped};*/
       }
    }
    
